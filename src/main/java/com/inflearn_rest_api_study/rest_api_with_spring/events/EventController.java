@@ -6,11 +6,13 @@ import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,7 +25,10 @@ public class EventController {
     private final ModelMapper modelMapper;
 
     @PostMapping
-    public ResponseEntity<?> createEvent(@RequestBody EventDto eventDto) {
+    public ResponseEntity<?> createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().build();
+        }
         EventEntity event = modelMapper.map(eventDto, EventEntity.class);
         EventEntity newEvent = eventRepository.save(event);
         URI createUri = WebMvcLinkBuilder.linkTo(EventController.class).slash(newEvent.getId().toString()).toUri();
