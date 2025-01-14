@@ -1,5 +1,7 @@
 package com.inflearn_rest_api_study.rest_api_with_spring.events;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+
 import java.net.URI;
 
 import org.modelmapper.ModelMapper;
@@ -38,8 +40,13 @@ public class EventController {
         }
 
         EventEntity event = modelMapper.map(eventDto, EventEntity.class);
+        event.update();
         EventEntity newEvent = eventRepository.save(event);
-        URI createUri = WebMvcLinkBuilder.linkTo(EventController.class).slash(newEvent.getId().toString()).toUri();
-        return ResponseEntity.created(createUri).body(newEvent);
+        WebMvcLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(newEvent.getId().toString());
+        URI createUri = selfLinkBuilder.toUri();
+        EventResource eventResource = new EventResource(newEvent);
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+        eventResource.add(selfLinkBuilder.withRel("update-event"));
+        return ResponseEntity.created(createUri).body(eventResource);
     }
 }

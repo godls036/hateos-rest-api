@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDateTime;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class EventControllerTests {
         ObjectMapper objectMapper;
 
         @Test
+        @DisplayName("정상적으로 이벤트를 생성하는 테스트")
         public void createEvent() throws Exception {
                 EventDto eventDto = EventDto.builder()
                                 .name("Spring")
@@ -56,14 +58,18 @@ public class EventControllerTests {
                                 .andDo(print())
                                 .andExpect(status().isCreated())
                                 .andExpect(jsonPath("id").exists())
-                                .andExpect(jsonPath("id").value(Matchers.not(10)))
-                                .andExpect(jsonPath("free").value(Matchers.not(true)))
+                                .andExpect(jsonPath("free").value(false))
+                                .andExpect(jsonPath("offline").value(true))
                                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
                                 .andExpect(header().exists(HttpHeaders.LOCATION))
-                                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE));
+                                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+                                .andExpect(jsonPath("_links.self").exists())
+                                .andExpect(jsonPath("_links.query-events").exists())
+                                .andExpect(jsonPath("_links.update-event").exists());
         }
 
         @Test
+        @DisplayName("입력 받을 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
         public void createEvent_BadRequest() throws Exception {
                 EventEntity event = EventEntity.builder()
                                 .id(10)
@@ -90,6 +96,7 @@ public class EventControllerTests {
         }
 
         @Test
+        @DisplayName("입력값이 비어있는 경우에 에러가 발생하는 테스트")
         public void createEvent_BadRequest_EmptyInput() throws Exception {
                 EventDto eventDto = EventDto.builder().build();
 
@@ -100,6 +107,7 @@ public class EventControllerTests {
         }
 
         @Test
+        @DisplayName("입력값이 잘못된 경우에 에러가 발생하는 테스트")
         public void createEvent_BadRequest_InvalidInput() throws Exception {
                 EventDto eventDto = EventDto.builder()
                                 .name("Spring")
